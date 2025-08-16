@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Amante Quiz</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 1080px;
+            height: 1920px;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            position: relative;
+            margin: 0 auto;
+        }
+        
+        /* Lock Screen Video */
+        #lockScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: black;
+            cursor: pointer;
+        }
+
+        #lockScreenVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .skip-message {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.8rem;
+            border: 2px solid white;
+            pointer-events: none;
+            animation: pulse 2s infinite;
+        }
+
+        /* Video Background */
+        #video-background {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: -99;
+        }
+
+        /* Main Container */
+        .main-container {
+            width: 1080px;
+            height: 1920px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .content-box {
+            width: 1000px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 30px;
+            padding: 60px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        /* Quiz Page */
+        #questionContainer {
+            width: 100%;
+        }
+
+        .question {
+            margin-bottom: 50px;
+        }
+
+        .question h3 {
+            font-size: 2.8rem;
+            color: #4CAF50;
+            margin-bottom: 40px;
+        }
+
+        .question p {
+            font-size: 3rem;
+            margin-bottom: 50px;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 3px solid #4CAF50;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .option:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .option.selected {
+            background-color: rgba(76, 175, 80, 0.3);
+            border-color: #45a049;
+            animation: pulse 0.5s;
+        }
+
+        .option-image {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 15px;
+            border: 3px solid #4CAF50;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+
+        .option:hover .option-image {
+            transform: scale(1.05);
+        }
+
+        /* Score Pages */
+        .score-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .score-content {
+            width: 90%;
+            max-width: 900px;
+            padding: 60px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-title {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px currentColor;
+            animation: bounceIn 1s;
+        }
+
+        .score-message {
+            font-size: 3rem;
+            margin: 20px 0;
+            color: #FFFFFF;
+            animation: fadeInUp 1s;
+        }
+
+        .score-highlight {
+            font-size: 4rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px currentColor;
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+        }
+
+        /* Perfect Score (20%) */
+        .perfect-score {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .perfect-score .score-content {
+            border: 3px solid gold;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+        }
+        .perfect-score .score-title {
+            color: gold;
+            animation: rubberBand 1s, glow 2s infinite alternate;
+        }
+        .perfect-score .score-highlight {
+            color: gold;
+            animation: tada 1.5s infinite, glow 2s infinite alternate;
+        }
+
+        /* Good Score (15%) */
+        .good-score {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .good-score .score-content {
+            border: 3px solid #FFA500;
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.5);
+        }
+        .good-score .score-title {
+            color: #FFA500;
+            animation: swing 1s, glow-orange 2s infinite alternate;
+        }
+        .good-score .score-highlight {
+            color: #FFA500;
+            animation: pulse 1.5s infinite, glow-orange 2s infinite alternate;
+        }
+
+        /* Basic Score (10%) */
+        .basic-score {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .basic-score .score-content {
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+        }
+        .basic-score .score-title {
+            color: #4CAF50;
+            animation: flipInX 1s, glow-green 2s infinite alternate;
+        }
+        .basic-score .score-highlight {
+            color: #4CAF50;
+            animation: pulse 1.5s infinite, glow-green 2s infinite alternate;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold; }
+            to { text-shadow: 0 0 10px gold, 0 0 20px gold, 0 0 30px gold; }
+        }
+
+        @keyframes glow-orange {
+            from { text-shadow: 0 0 5px #FFA500, 0 0 10px #FFA500, 0 0 15px #FFA500; }
+            to { text-shadow: 0 0 10px #FFA500, 0 0 20px #FFA500, 0 0 30px #FFA500; }
+        }
+
+        @keyframes glow-green {
+            from { text-shadow: 0 0 5px #4CAF50, 0 0 10px #4CAF50, 0 0 15px #4CAF50; }
+            to { text-shadow: 0 0 10px #4CAF50, 0 0 20px #4CAF50, 0 0 30px #4CAF50; }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+            animation: confetti-fall 5s linear infinite;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Stars */
+        .star {
+            position: absolute;
+            font-size: 2rem;
+            color: gold;
+            opacity: 0;
+            animation: floatStar 3s linear infinite;
+        }
+
+        @keyframes floatStar {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+                transform: translateY(-40px) rotate(180deg) scale(1.2);
+                text-shadow: 0 0 15px gold;
+            }
+            100% {
+                transform: translateY(-80px) rotate(360deg) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lockScreen">
+        <video id="lockScreenVideo" autoplay muted loop>
+            <source src="Amante kiosk video.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <div class="skip-message" id="skipMessage">TOUCH ANYWHERE TO START</div>
+    </div>
+
+    <!-- Video Background -->
+    <video autoplay muted loop id="video-background">
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+    </video>
+    <div class="overlay"></div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Quiz Page -->
+        <div class="page-container hidden" id="quizPage">
+            <div class="content-box">
+                <div id="quizContent">
+                    <img src="images/logo.png" alt="Amante Logo" style="max-width: 400px; margin-bottom: 20px;" class="animate__animated animate__fadeIn">
+                    <h1 style="font-size: 3.5rem; margin-bottom: 50px;" class="animate__animated animate__fadeIn">MATCH & WIN </h1>
+                    <div id="questionContainer"></div>
+                </div>
+                <div id="resultContainer" class="hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score Pages -->
+    <div id="perfectScoreContainer" class="score-page perfect-score hidden">
+        <div class="score-content">
+            <h1 class="score-title">CONGRAJULATIONS!</h1>
+            <p class="score-message">YOU GOT ALL 3 OUT OF 3</p>
+            <p class="score-message" style="font-weight: bold;">PERFECT SCORE!</p>
+            <p class="score-message">YOU'VE WON <span class="score-highlight">20% DISCOUNT</span></p>
+            <p class="score-message">VOUCHER</p>
+        </div>
+    </div>
+
+    <div id="goodScoreContainer" class="score-page good-score hidden">
+        <div class="score-content">
+            <h1 class="score-title">WELL DONE!</h1>
+            <p class="score-message">YOU GOT 2 OUT OF 3</p>
+            <p class="score-message" style="font-weight: bold;">GREAT SCORE!</p>
+            <p class="score-message">YOU'VE WON <span class="score-highlight">15% DISCOUNT</span></p>
+            <p class="score-message">VOUCHER</p>
+        </div>
+    </div>
+
+    <div id="basicScoreContainer" class="score-page basic-score hidden">
+        <div class="score-content">
+            <h1 class="score-title">GOOD TRY!</h1>
+            <p class="score-message">YOU GOT 1 OUT OF 3</p>
+            <p class="score-message" style="font-weight: bold;">GOOD SCORE!</p>
+            <p class="score-message">YOU'VE WON <span class="score-highlight">10% DISCOUNT</span></p>
+            <p class="score-message">VOUCHER</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lockScreen = document.getElementById('lockScreen');
+            const lockScreenVideo = document.getElementById('lockScreenVideo');
+            const skipMessage = document.getElementById('skipMessage');
+            const quizPage = document.getElementById('quizPage');
+            
+            // Score containers
+            const perfectScoreContainer = document.getElementById('perfectScoreContainer');
+            const goodScoreContainer = document.getElementById('goodScoreContainer');
+            const basicScoreContainer = document.getElementById('basicScoreContainer');
+            
+            // Initialize lock screen
+            function initializeLockScreen() {
+                // Try to autoplay video
+                lockScreenVideo.play().catch(e => {
+                    console.log("Autoplay prevented, showing play button");
+                    lockScreenVideo.controls = true;
+                });
+            }
+            
+            // Skip lock screen when clicked
+            function skipLockScreen() {
+                // Fade out animation
+                lockScreen.style.transition = "opacity 0.5s ease-out";
+                lockScreen.style.opacity = '0';
+                
+                // Hide after fade completes
+                setTimeout(() => {
+                    lockScreen.classList.add('hidden');
+                    quizPage.classList.remove('hidden');
+                    startQuiz();
+                }, 500);
+            }
+            
+            // Set up event listeners
+            lockScreen.addEventListener('click', skipLockScreen);
+            
+            // Initialize
+            initializeLockScreen();
+
+            // Quiz Logic
+            const questionContainer = document.getElementById('questionContainer');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            let currentQuestion = 0;
+            let score = 0;
+            let userAnswers = [];
+            let questions = [];
+
+            // Sample Questions
+            questions = [
+                {
+                    question: "Which Bra is specially designed to wear with Sarees, Shalvas or Kurthis?",
+                    option1: "Uni-flex t Shirt Bra",
+                    option2: "Saree Shaper Bra", 
+                    option3: "Energize Aerochic Sports Bra",
+                    option4: "Contoured Comfort Support Minimizer Bra",
+                    correct_answer: 2,
+                    image1: "uniflex_bra.jpg",
+                    image2: "saree_shaper.jpg",
+                    image3: "aerochic_sports.jpg",
+                    image4: "count_bra.jpg"
+                },
+                {
+                    question: "Which bra is soft, seamless, and feels like a second skin?",
+                    option1: "Energize Aerochic Sports Bra",
+                    option2: "SKINS Bra",
+                    option3: "Saree Shaper Bra",
+                    option4: "Uni-flex t Shirt Bra",
+                    correct_answer: 2,
+                    image1: "aerochic_sports.jpg",
+                    image2: "skins_bra.jpg",
+                    image3: "saree_shaper.jpg",
+                    image4: "uniflex_bra.jpg"
+                },
+                {
+                    question: "Which bra can be styled in six different ways to match different outfits?",
+                    option1: "Uni-flex t Shirt Bra",
+                    option2: "SKINS Bra",
+                    option3: "Multiway Bra",
+                    option4: "Saree Shaper Bra",
+                    correct_answer: 3,
+                    image1: "uniflex_bra.jpg",
+                    image2: "skins_bra.jpg",
+                    image3: "MultiwayBra.jpg",
+                    image4: "saree_shaper.jpg"
+                }
+            ];
+
+            function startQuiz() {
+                userAnswers = new Array(questions.length).fill(null);
+                showQuestion();
+            }
+
+            function showQuestion() {
+                if (currentQuestion >= questions.length) {
+                    showResults();
+                    return;
+                }
+
+                const question = questions[currentQuestion];
+                questionContainer.innerHTML = `
+                    <div class="question animate__animated animate__fadeIn">
+                        <h3>Question ${currentQuestion + 1} of ${questions.length}</h3>
+                        <p>${question.question}</p>
+                        <div class="options">
+                            ${[1, 2, 3, 4].map(i => `
+                                <div class="option" data-index="${i}">
+                                    ${question[`image${i}`] ? 
+                                        `<img src="images/${question[`image${i}`]}" class="option-image" alt="Option ${i}">` : ''}
+                                    <div class="option-text">${question[`option${i}`]}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="btn btn-primary btn-lg next-btn animate__animated animate__fadeIn animate__delay-1s" 
+                                style="padding: 25px 50px; font-size: 2.5rem; margin-top: 50px;">
+                            ${currentQuestion === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                        </button>
+                    </div>
+                `;
+
+                // Set up option selection
+                const options = questionContainer.querySelectorAll('.option');
+                options.forEach(option => {
+                    option.addEventListener('click', function() {
+                        options.forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                        userAnswers[currentQuestion] = parseInt(this.getAttribute('data-index'));
+                    });
+                });
+
+                // Set up next button with Bootstrap styling
+                const nextBtn = questionContainer.querySelector('.next-btn');
+                nextBtn.addEventListener('click', () => {
+                    if (userAnswers[currentQuestion] === null) {
+                        alert('Please select an answer before continuing');
+                        return;
+                    }
+                    currentQuestion++;
+                    showQuestion();
+                });
+            }
+
+            function showResults() {
+                // Calculate score
+                score = questions.reduce((total, q, i) => {
+                    return total + (userAnswers[i] === q.correct_answer ? 1 : 0);
+                }, 0);
+
+                // Hide quiz page
+                quizPage.classList.add('hidden');
+                
+                // Show appropriate score page with animations
+                if (score === 3) {
+                    perfectScoreContainer.classList.remove('hidden');
+                    createConfetti(perfectScoreContainer, 150, 'gold');
+                    createStars(perfectScoreContainer, 20);
+                } else if (score === 2) {
+                    goodScoreContainer.classList.remove('hidden');
+                    createConfetti(goodScoreContainer, 100, '#FFA500');
+                } else if (score === 1) {
+                    basicScoreContainer.classList.remove('hidden');
+                    createConfetti(basicScoreContainer, 50, '#4CAF50');
+                }
+                
+                // Set timeout to return to lock screen after 7 seconds
+                setTimeout(returnToLockScreen, 7000);
+            }
+
+            function createConfetti(container, amount, color) {
+                const colors = [color, '#fff', color, '#fff', color];
+                for (let i = 0; i < amount; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.width = Math.random() * 10 + 5 + 'px';
+                    confetti.style.height = Math.random() * 10 + 5 + 'px';
+                    confetti.style.animationDelay = Math.random() * 5 + 's';
+                    confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
+                    container.appendChild(confetti);
+                }
+            }
+
+            function createStars(container, amount) {
+                for (let i = 0; i < amount; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'star';
+                    star.innerHTML = '★';
+                    star.style.left = Math.random() * 100 + 'vw';
+                    star.style.top = Math.random() * 100 + 'vh';
+                    star.style.animationDelay = Math.random() * 3 + 's';
+                    container.appendChild(star);
+                }
+            }
+
+            function returnToLockScreen() {
+                // Hide all pages
+                quizPage.classList.add('hidden');
+                perfectScoreContainer.classList.add('hidden');
+                goodScoreContainer.classList.add('hidden');
+                basicScoreContainer.classList.add('hidden');
+                
+                // Clear animations
+                document.querySelectorAll('.confetti, .star').forEach(el => el.remove());
+                
+                // Show lock screen
+                lockScreen.classList.remove('hidden');
+                lockScreen.style.opacity = '1';
+                
+                // Reset quiz state
+                currentQuestion = 0;
+                score = 0;
+                userAnswers = [];
+                
+                // Restart lock screen video
+                lockScreenVideo.currentTime = 0;
+                lockScreenVideo.play().catch(e => {
+                    console.log("Autoplay prevented");
+                    lockScreenVideo.controls = true;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
